@@ -246,7 +246,6 @@ const PROFIL = {
 
         if (gallerySlides.length) {
             let currentSlide = -1;
-            let slideTimer = null;
             let slideRequest = 0;
 
             const showSlide = (index) => {
@@ -278,42 +277,43 @@ const PROFIL = {
                 }
             };
 
-            const startAutoPlay = () => {
-                if (slideTimer) clearInterval(slideTimer);
-                slideTimer = setInterval(() => {
-                    showSlide(currentSlide + 1);
-                }, 5000);
-            };
-
             if (galleryPrev) {
                 galleryPrev.addEventListener("click", () => {
                     showSlide(currentSlide - 1);
-                    startAutoPlay();
                 });
             }
 
             if (galleryNext) {
                 galleryNext.addEventListener("click", () => {
                     showSlide(currentSlide + 1);
-                    startAutoPlay();
                 });
             }
 
             galleryDots.forEach((dot, index) => {
                 dot.addEventListener("click", () => {
                     showSlide(index);
-                    startAutoPlay();
                 });
             });
 
             showSlide(0);
-            startAutoPlay();
         }
     };
 
-    initializeGallery().catch(() => {
+    const loadGallery = () => initializeGallery().catch(() => {
         if (galleryViewport) galleryViewport.textContent = "La galerie est momentanément indisponible.";
     });
+    const gallerySection = $("#galerie");
+    if (gallerySection && "IntersectionObserver" in window) {
+        const galleryObserver = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                galleryObserver.disconnect();
+                loadGallery();
+            }
+        }, { rootMargin: "300px 0px" });
+        galleryObserver.observe(gallerySection);
+    } else {
+        loadGallery();
+    }
 
     if (box && boxImg && typeof box.showModal === "function") {
         $("#lightbox-close").addEventListener("click", () => box.close());
